@@ -4,6 +4,7 @@ from app.adapters import repository
 from app.adapters.langchain import langchain_executor
 from app.domain import model
 from app.adapters.langchain import langchain_tools
+import pprint
 
 
 class AgentManager:
@@ -86,16 +87,16 @@ class AgentManager:
         return [human_message, ai_message]
 
     @staticmethod
-    def send_response_to_patient(message:str):
+    def send_response_to_patient(message: str):
         print(message)
 
 
 r = repository.DynamoRepository(region_name="us-east-1")
 # query_: str = "Hola buen dia, quisiera agendar una cita."
 # query_ = "Claro, mi nombre es pepito tengo 22 años, motivo de consulta ansiedad"
-query_: str = "hola"
+# query_: str = "hola"
 agent_executor_: Callable = langchain_executor.invoke
-
-AgentManager.invoke_initial_agent(
-    repo=r, query=query_, agent_executor=agent_executor_, id_="25"
-)
+while True:
+    AgentManager.invoke_initial_agent(
+        repo=r, query=input("Paciente: "), agent_executor=agent_executor_, id_="37"
+    )

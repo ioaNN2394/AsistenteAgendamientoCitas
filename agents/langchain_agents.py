@@ -1,9 +1,9 @@
-from typing import List, Dict, Type, Tuple
+from typing import List, Dict, Type, Optional
 
-from app.adapters.langchain import langchain_tools
-from app.domain import model
 import pydantic
 
+import models
+from agents import langchain_tools
 
 info_agent_instructions = """Eres Claudia, una secretaria altamente experimentada en la organización y programación 
 de citas, y actualmente trabajas para la doctora Mariana. Al iniciar la conversación y solo al iniciar, asegúrate de 
@@ -24,28 +24,18 @@ class Agent(pydantic.BaseModel):
     tools: List
 
 
-class _InfoRecollectionAgent(Agent):
+class StandardAgent(Agent):
     name: str = "info_recollection"
     instruction: str = info_agent_instructions
-    tools: List
+    chat_history: models.Chat
+    tools: Optional[List] = None
+
+    @pydantic.model_validator(mode="after")
+    def set_tools(self) -> "StandardAgent":
+        self.tools = [langchain_tools.SendPatientInfo(chat_history=self.chat_history)]
+        return self
 
 
-class _AppointmentSchedulingAgent(Agent):
-    name: str = "appointment_scheduling"
-    instruction: str = "I can help you with appointment scheduling"
-    tools: List
-
-
-_agent_strategy: Dict[model.ChatStatus, Tuple[Type[Agent], List]] = {
-    model.ChatStatus.recollecting_info: (
-        _InfoRecollectionAgent,
-        [langchain_tools.SendPatientInfo],
-    ),
-    model.ChatStatus.scheduling_appointment: (_AppointmentSchedulingAgent, []),
+AGENT_FACTORY: Dict[models.ChatStatus, Type[Agent]] = {
+    models.ChatStatus.status1: StandardAgent,
 }
-
-
-def get_agent(chat_history: model.Chat) -> Agent:
-    agent, tools = _agent_strategy[chat_history.status]
-    configured_tools = [tool(chat_history=chat_history) for tool in tools]
-    return agent(tools=configured_tools)
