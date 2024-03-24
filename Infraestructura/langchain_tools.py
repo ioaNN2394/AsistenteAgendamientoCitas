@@ -6,14 +6,23 @@ from langchain_core import (
     callbacks as langchain_core_callbacks,
 )
 
-import models
+from Infraestructura import models
 
 
 class _PatientInfo(pydantic.BaseModel):
     name: str = pydantic.Field(..., description="Nombre del paciente")
     age: int = pydantic.Field(..., description="Edad del paciente")
     motive: str = pydantic.Field(..., description="Motivo de la consulta")
+    country: str = pydantic.Field(..., description="Pais del paciente")
+    date: str = pydantic.Field(..., description="Fecha de la cita")
 
+
+class PatientInfoChecker:
+    def __init__(self, patient_info: _PatientInfo):
+        self.patient_info = patient_info
+
+    def is_info_complete(self) -> bool:
+        return all(value not in (None, '') for value in self.patient_info.dict().values())
 
 class SendPatientInfo(langchain_core_tools.BaseTool):
     """Tool that fetches active deployments."""
@@ -26,6 +35,8 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
     chat_history: Optional[models.Chat] = None
     return_direct = True
 
+
+
     def __init__(
         self, chat_history: Optional[models.Chat] = None, **kwargs: Any
     ) -> None:
@@ -33,14 +44,22 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
         self.chat_history = chat_history
 
     def _run(
-        self,
-        name: str,
-        age: int,
-        motive: str,
-        run_manager: Optional[
-            langchain_core_callbacks.CallbackManagerForToolRun
-        ] = None,
+            self,
+            name: str,
+            age: int,
+            motive: str,
+            country: str,
+            date: str,
+            run_manager: Optional[
+                langchain_core_callbacks.CallbackManagerForToolRun
+            ] = None,
     ) -> str:
+        patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
+        info_checker = PatientInfoChecker(patient_info)
+
+        if not info_checker.is_info_complete():
+            return "Please provide all the required information: name, age, motive, country, and date."
+
         if self.chat_history:
             self.chat_history.status = models.ChatStatus.status2
         return f"Vale, regalame un momento"

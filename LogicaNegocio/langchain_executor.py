@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List
 
 from langchain import agents as langchain_agents_executor
 from langchain import chat_models as langchain_chat_models
@@ -7,18 +7,19 @@ from langchain.agents import format_scratchpad as langchain_format_scratchpad
 from langchain.agents import output_parsers as langchain_output_parsers
 from langchain.tools import render as langchain_render
 from langchain_core.messages import base as base_langchain_messages
-from app.adapters.langchain import langchain_agents
-from app.domain import model
 
+from Infraestructura import models
+from LogicaNegocio import langchain_agents
 
 _MEMORY_KEY = "chat_history"
 
 
 def invoke(
-    chat_history: model.Chat,
+    chat_history: models.Chat,
     query: str,
 ) -> str:
-    agent = langchain_agents.get_agent(chat_history=chat_history)
+    agent_strategy = langchain_agents.AGENT_FACTORY[chat_history.status]
+    agent = agent_strategy(chat_history=chat_history)
     if chat_history:
         return _invoke_with_chat_history(
             chat_history=chat_history, query=query, agent=agent
@@ -29,7 +30,7 @@ def invoke(
 def _deserialize_messages(messages: List) -> List[base_langchain_messages.BaseMessage]:
     messages_deserialized = []
     for message in messages:
-        type_message = model.TYPE_MESSAGE_FACTORY[message.sender]
+        type_message = models.TYPE_MESSAGE_FACTORY[message.sender]
         messages_deserialized.append(type_message(content=message.message))
     return messages_deserialized
 
@@ -46,7 +47,7 @@ def _invoke(query: str, agent: langchain_agents.Agent) -> str:
 
     llm_with_tools = llm.bind(
         functions=[
-            langchain_render.format_tool_to_openai_function(t) for t in agent.tools
+            langchain_render.format_tool_to_openai_function(t) for t in (agent.tools or [])
         ]
     )
 
@@ -71,9 +72,9 @@ def _invoke(query: str, agent: langchain_agents.Agent) -> str:
 
 
 def _invoke_with_chat_history(
-    chat_history: model.Chat,
-    query: str,
-    agent: langchain_agents.Agent,
+        chat_history: models.Chat,
+        query: str,
+        agent: langchain_agents.Agent,
 ) -> str:
 
     prompt = prompts.ChatPromptTemplate.from_messages(
@@ -88,7 +89,7 @@ def _invoke_with_chat_history(
 
     llm_with_tools = llm.bind(
         functions=[
-            langchain_render.format_tool_to_openai_function(t) for t in agent.tools
+            langchain_render.format_tool_to_openai_function(t) for t in (agent.tools or [])
         ]
     )
 

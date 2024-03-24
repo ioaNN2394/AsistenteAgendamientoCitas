@@ -34,6 +34,7 @@ class Message(pydantic.BaseModel):
 class ChatStatus(str, enum.Enum):
     status1: str = "status1"
     status2: str = "status2"
+    status3: str = "status3"
 
 
 class Chat(Entity):

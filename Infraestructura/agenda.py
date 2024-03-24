@@ -32,7 +32,7 @@ class GoogleCalendarManager:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    "client_secret_app_escritorio_oauth.json", SCOPES
+                    "../client_secret_app_escritorio_oauth.json", SCOPES
                 )
                 creds = flow.run_local_server(port=0)
 
