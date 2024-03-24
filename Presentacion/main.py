@@ -12,7 +12,7 @@ while True:
     ai_response = langchain_executor.invoke(query=user_query, chat_history=chat)
 
     # Verificar si el StandardAgent ha completado su tarea
-    if chat.status == ChatStatus.status1 and 'Vale, regalame un momento' in ai_response:
+    if chat.status == ChatStatus.status1 and 'Vale, regalame un momento 123' in ai_response:
         chat.status = ChatStatus.status2  # Cambiar al estado para SecondAgent
 
     # Imprimir el estado actual del chat
