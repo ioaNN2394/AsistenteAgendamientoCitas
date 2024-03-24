@@ -59,8 +59,11 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
         info_checker = PatientInfoChecker(patient_info)
 
         if not info_checker.is_info_complete():
-            return "Please provide all the required information: name, age, motive, country, and date."
+            return "Porfavor suministra todos los datos necesarios para agendar tu cita de manera correcta"
 
         if self.chat_history:
-            self.chat_history.status = models.ChatStatus.status2
+            if self.chat_history.status == models.ChatStatus.status2:
+                self.chat_history.status = models.ChatStatus.status3
+            else:
+                self.chat_history.status = models.ChatStatus.status2
         return f"Vale, regalame un momento"
