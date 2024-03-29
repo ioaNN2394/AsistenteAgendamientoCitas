@@ -20,6 +20,7 @@ def invoke(
 ) -> str:
     agent_strategy = langchain_agents.AGENT_FACTORY[chat_history.status]
     agent = agent_strategy(chat_history=chat_history)
+
     if chat_history:
         return _invoke_with_chat_history(
             chat_history=chat_history, query=query, agent=agent

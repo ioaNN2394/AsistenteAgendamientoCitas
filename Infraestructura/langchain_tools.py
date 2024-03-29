@@ -25,6 +25,10 @@ class PatientInfoChecker:
     def is_info_complete(self) -> bool:
         return all(value not in (None, '') for value in self.patient_info.dict().values())
 
+
+
+
+
 class SendPatientInfo(langchain_core_tools.BaseTool):
     """Tool that fetches active deployments."""
 
@@ -35,7 +39,6 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
     args_schema: Type[pydantic.BaseModel] = _PatientInfo
     chat_history: Optional[models.Chat] = None
     return_direct = True
-
 
 
     def __init__(
@@ -61,9 +64,57 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
         if not info_checker.is_info_complete():
             return "Porfavor suministra todos los datos necesarios para agendar tu cita de manera correcta"
 
-        if self.chat_history:
+        if self. chat_history:
             if self.chat_history.status == models.ChatStatus.status2:
                 self.chat_history.status = models.ChatStatus.status3
             else:
                 self.chat_history.status = models.ChatStatus.status2
         return f"Vale, regalame un momento"
+
+
+class InformPsychologist(langchain_core_tools.BaseTool):
+    """Tool that informs the psychologist about a new appointment."""
+
+    name: str = "inform_psychologist_status3"
+    description: str = (
+        "Used when a patient has requested an appointment and the chat status is status3. This tool informs the psychologist about the appointment and provides all the patient's data."
+    )
+    args_schema: Type[pydantic.BaseModel] = _PatientInfo
+    chat_history: Optional[models.Chat] = None
+    return_direct = True
+
+    def __init__(
+        self, chat_history: Optional[models.Chat] = None, **kwargs: Any
+    ) -> None:
+        super().__init__(**kwargs)
+        self.chat_history = chat_history
+
+    def _run(
+            self,
+            name: str,
+            age: int,
+            motive: str,
+            country: str,
+            date: str,
+            run_manager: Optional[
+                langchain_core_callbacks.CallbackManagerForToolRun
+            ] = None,
+    ) -> str:
+        patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
+        info_checker = PatientInfoChecker(patient_info)
+
+        if not info_checker.is_info_complete():
+            return "Some patient data is missing. Please ensure all data is collected before informing the psychologist."
+
+        # Here you would add the code to inform the psychologist. This could be an API call, an email, etc.
+        # As this is a hypothetical scenario, we'll just return a string.
+
+        # Once the instruction in status3 is complete, change the chat status to status4
+        if self.chat_history:
+            # Check if the doctor has any more questions
+            if self.chat_history.doctor_has_questions:
+                return f"Psicologa Mariana, tiene un nuevo paciente. ¿Tiene alguna pregunta?"
+            else:
+                self.chat_history.status = models.ChatStatus.status4
+
+        return f"Psicologa Mariana, tiene un nuevo paciente"

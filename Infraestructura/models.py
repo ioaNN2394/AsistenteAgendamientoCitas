@@ -35,8 +35,10 @@ class ChatStatus(str, enum.Enum):
     status1: str = "status1"
     status2: str = "status2"
     status3: str = "status3"
+    status4: str = "status4"
 
 
 class Chat(Entity):
     messages: List[Message] = pydantic.Field(default_factory=list)
     status: ChatStatus = ChatStatus.status1
+    doctor_has_questions: bool = True # Doctora tiene preguntas
