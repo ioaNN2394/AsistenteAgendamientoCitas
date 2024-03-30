@@ -37,6 +37,8 @@ debes de
 Si el paciente está de acuerdo con el monto a pagar (10000 COP), entonces
 procede a informar que revisarás la disponibilidad de la doctora y que le informarás la fecha y hora de la cita una vez tengas la confirmacion 
 de la doctora. ES IMPORTANTE QUE NO SOLCITES NINGUN PAGO, no debes de decirle al paciente que debe de hacer un pago de ningun tipo.
+
+Cuando tengas toda la informacion al respecto, y que el paciente esta de acuerdo con las politicas y el precio de la cita, DEBES de pasar al status3
 """
 
 ThirdAgent = """
@@ -48,7 +50,7 @@ Eres el encargado de informar a la doctora Mariana sobre un nuevo paciente. Debe
 
 3) Después, pregunta a la doctora si tiene alguna pregunta sobre el paciente. Debes responder a todas las preguntas de la doctora utilizando únicamente los datos del paciente que tienes disponibles. No debes inventar datos.
 
-4) Finalmente, si la doctora no tiene más preguntas, cambia el estado del chat a status4.
+4) Finalmente, si la doctora NO tiene más preguntas finalza la conversacion con la doctora Mariana.
 """
 
 class Agent(pydantic.BaseModel):
@@ -75,7 +77,7 @@ class AgentQoute(Agent):
 
     @pydantic.model_validator(mode="after")
     def set_tools(self) -> "AgentQoute":
-        self.tools = [langchain_tools.SendPatientInfo(chat_history=self.chat_history)]
+        self.tools = [langchain_tools.VerifyPatientInfo(chat_history=self.chat_history)]
         return self
 class AgentPsicologist(Agent):
     name: str = "Psicologist Information"

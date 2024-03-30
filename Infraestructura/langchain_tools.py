@@ -17,6 +17,11 @@ class _PatientInfo(pydantic.BaseModel):
     country: str = pydantic.Field(..., description="Pais del paciente")
     date: str = pydantic.Field(..., description="Fecha de la cita")
 
+class _QuotetInfo(pydantic.BaseModel):
+    payment_method: str = pydantic.Field(..., description="Metodo de pago del paciente")
+    agrees_to_policies: bool = pydantic.Field(..., description="El paciente esta de acuerdo con las politicas")
+
+
 
 class PatientInfoChecker:
     def __init__(self, patient_info: _PatientInfo):
@@ -42,7 +47,7 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
 
 
     def __init__(
-        self, chat_history: Optional[models.Chat] = None, **kwargs: Any
+        self, chat_history: Optional[models.Chat] = None,**kwargs: Any
     ) -> None:
         super().__init__(**kwargs)
         self.chat_history = chat_history
@@ -64,13 +69,45 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
         if not info_checker.is_info_complete():
             return "Porfavor suministra todos los datos necesarios para agendar tu cita de manera correcta"
 
-        if self. chat_history:
-            if self.chat_history.status == models.ChatStatus.status2:
-                self.chat_history.status = models.ChatStatus.status3
-            else:
-                self.chat_history.status = models.ChatStatus.status2
+        if self.chat_history.status == models.ChatStatus.status1:
+            self.chat_history.status = models.ChatStatus.status2
         return f"Vale, regalame un momento"
 
+
+
+
+
+class VerifyPatientInfo(langchain_core_tools.BaseTool):
+    """Tool that fetches active deployments."""
+
+    name: str = "Verify_patient_info"
+    description: str = (
+        "Util cuando para verificar las politicas de la cita y tipo de pago del paciente"
+    )
+    args_schema: Type[pydantic.BaseModel] = _QuotetInfo
+    chat_history: Optional[models.Chat] = None
+    return_direct = True
+
+    def __init__(
+        self, chat_history: Optional[models.Chat] = None, **kwargs: Any
+    ) -> None:
+        super().__init__(**kwargs)
+        self.chat_history = chat_history
+
+    def _run(
+            self,
+            payment_method: str,
+            agrees_to_policies: bool,
+            run_manager: Optional[
+                langchain_core_callbacks.CallbackManagerForToolRun
+            ] = None,
+    ) -> str:
+        if agrees_to_policies:
+            if self.chat_history.status == models.ChatStatus.status2:
+                self.chat_history.status = models.ChatStatus.status3
+            return f"Gracias por confirmar. Tu método de pago es {payment_method}."
+        else:
+            return "Por favor, debes estar de acuerdo con las políticas para continuar."
 
 class InformPsychologist(langchain_core_tools.BaseTool):
     """Tool that informs the psychologist about a new appointment."""
@@ -89,32 +126,12 @@ class InformPsychologist(langchain_core_tools.BaseTool):
         super().__init__(**kwargs)
         self.chat_history = chat_history
 
-    def _run(
-            self,
-            name: str,
-            age: int,
-            motive: str,
-            country: str,
-            date: str,
-            run_manager: Optional[
-                langchain_core_callbacks.CallbackManagerForToolRun
-            ] = None,
-    ) -> str:
-        patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
-        info_checker = PatientInfoChecker(patient_info)
-
-        if not info_checker.is_info_complete():
-            return "Some patient data is missing. Please ensure all data is collected before informing the psychologist."
-
-        # Here you would add the code to inform the psychologist. This could be an API call, an email, etc.
-        # As this is a hypothetical scenario, we'll just return a string.
-
-        # Once the instruction in status3 is complete, change the chat status to status4
+    def run(self) -> str:
         if self.chat_history:
             # Check if the doctor has any more questions
             if self.chat_history.doctor_has_questions:
                 return f"Psicologa Mariana, tiene un nuevo paciente. ¿Tiene alguna pregunta?"
-            else:
+            elif self.chat_history.status == models.ChatStatus.status3:
                 self.chat_history.status = models.ChatStatus.status4
 
         return f"Psicologa Mariana, tiene un nuevo paciente"
