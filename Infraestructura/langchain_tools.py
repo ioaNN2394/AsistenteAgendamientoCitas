@@ -31,6 +31,9 @@ class PatientInfoChecker:
         return all(value not in (None, '') for value in self.patient_info.dict().values())
 
 
+class DoctorMPatient(pydantic.BaseModel): # M = Meet
+    MeetPatient: bool = pydantic.Field(..., description="La doctora conoce al paciente")
+
 
 
 
@@ -116,7 +119,7 @@ class InformPsychologist(langchain_core_tools.BaseTool):
     description: str = (
         "Used when a patient has requested an appointment and the chat status is status3. This tool informs the psychologist about the appointment and provides all the patient's data."
     )
-    args_schema: Type[pydantic.BaseModel] = _PatientInfo
+    args_schema: Type[pydantic.BaseModel] = DoctorMPatient
     chat_history: Optional[models.Chat] = None
     return_direct = True
 
@@ -126,7 +129,13 @@ class InformPsychologist(langchain_core_tools.BaseTool):
         super().__init__(**kwargs)
         self.chat_history = chat_history
 
-    def run(self) -> str:
+    def _run(
+            self,
+            MeetPatient: bool,
+            run_manager: Optional[
+                langchain_core_callbacks.CallbackManagerForToolRun
+            ] = None,
+    ) -> str:
         if self.chat_history:
             # Check if the doctor has any more questions
             if self.chat_history.doctor_has_questions:
@@ -135,3 +144,4 @@ class InformPsychologist(langchain_core_tools.BaseTool):
                 self.chat_history.status = models.ChatStatus.status4
 
         return f"Psicologa Mariana, tiene un nuevo paciente"
+

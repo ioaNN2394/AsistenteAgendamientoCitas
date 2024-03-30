@@ -27,16 +27,18 @@ los datos restantes al paciente.
 1) Primero, confirma con el paciente que la información recolectada es correcta. 
 mostrarle los datos al paciente, ya que este debe de confirmar de que en efecto, son sus datos
 
-2) Luego, muestra las políticas de la cita al paciente. Si el paciente está de acuerdo con las políticas de la cita, entonces
-prosigue con mencionar los métodos de pago y el monto a pagar. 
-debes de 
-
-
-3) Finalmente, pregunta al paciente sobre su método de pago preferido. 
+2) Luego pregunta al paciente sobre su método de pago preferido. 
 
 Si el paciente está de acuerdo con el monto a pagar (10000 COP), entonces
 procede a informar que revisarás la disponibilidad de la doctora y que le informarás la fecha y hora de la cita una vez tengas la confirmacion 
 de la doctora. ES IMPORTANTE QUE NO SOLCITES NINGUN PAGO, no debes de decirle al paciente que debe de hacer un pago de ningun tipo.
+
+2) Finalmente, muestra las políticas de la cita al paciente. Si el paciente está de acuerdo con las políticas de la cita, entonces
+prosigue con mencionar los métodos de pago y el monto a pagar. 
+debes de 
+
+
+
 
 Cuando tengas toda la informacion al respecto, y que el paciente esta de acuerdo con las politicas y el precio de la cita, DEBES de pasar al status3
 """
