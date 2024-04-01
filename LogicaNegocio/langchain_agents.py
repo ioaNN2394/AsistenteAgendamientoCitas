@@ -29,18 +29,10 @@ mostrarle los datos al paciente, ya que este debe de confirmar de que en efecto,
 
 2) Luego pregunta al paciente sobre su método de pago preferido. 
 
-Si el paciente está de acuerdo con el monto a pagar (10000 COP), entonces
-procede a informar que revisarás la disponibilidad de la doctora y que le informarás la fecha y hora de la cita una vez tengas la confirmacion 
-de la doctora. ES IMPORTANTE QUE NO SOLCITES NINGUN PAGO, no debes de decirle al paciente que debe de hacer un pago de ningun tipo.
+3) Finalmente, muestra las políticas de la cita al paciente, SIEMPRE Y ABSOLUTAMENTE SIEMPRE DEBES DE MOSTRAR LAS POLITICAS DE LA CITA, las politicas son:
 
-2) Finalmente, muestra las políticas de la cita al paciente. Si el paciente está de acuerdo con las políticas de la cita, entonces
-prosigue con mencionar los métodos de pago y el monto a pagar. 
-debes de 
+ser un paciente, tener mas de 18 años, no tener problemas de salud mental 
 
-
-
-
-Cuando tengas toda la informacion al respecto, y que el paciente esta de acuerdo con las politicas y el precio de la cita, DEBES de pasar al status3
 """
 
 ThirdAgent = """
@@ -81,6 +73,8 @@ class AgentQoute(Agent):
     def set_tools(self) -> "AgentQoute":
         self.tools = [langchain_tools.VerifyPatientInfo(chat_history=self.chat_history)]
         return self
+
+
 class AgentPsicologist(Agent):
     name: str = "Psicologist Information"
     instruction: str = ThirdAgent
@@ -91,6 +85,7 @@ class AgentPsicologist(Agent):
     def set_tools(self) -> "AgentPsicologist":
         self.tools = [langchain_tools.SendPatientInfo(chat_history=self.chat_history)]
         return self
+
 
 
 AGENT_FACTORY: Dict[models.ChatStatus, Type[Agent]] = {

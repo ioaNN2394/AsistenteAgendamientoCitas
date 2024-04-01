@@ -18,6 +18,7 @@ class _PatientInfo(pydantic.BaseModel):
     date: str = pydantic.Field(..., description="Fecha de la cita")
 
 class _QuotetInfo(pydantic.BaseModel):
+    PatienData: bool = pydantic.Field(..., description="El paciente confirma sus datos")
     payment_method: str = pydantic.Field(..., description="Metodo de pago del paciente")
     agrees_to_policies: bool = pydantic.Field(..., description="El paciente esta de acuerdo con las politicas")
 
@@ -32,7 +33,7 @@ class PatientInfoChecker:
 
 
 class DoctorMPatient(pydantic.BaseModel): # M = Meet
-    MeetPatient: bool = pydantic.Field(..., description="La doctora conoce al paciente")
+    MeetPatient: bool = pydantic.Field(..., description="La doctora no tiene mas dudas sobre el paciente")
 
 
 
@@ -74,8 +75,7 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
 
         if self.chat_history.status == models.ChatStatus.status1:
             self.chat_history.status = models.ChatStatus.status2
-        return f"Vale, regalame un momento"
-
+        return "Hola otra vez, para continuar con el agendamiento de la cita envia (Continuar)"
 
 
 
@@ -99,18 +99,18 @@ class VerifyPatientInfo(langchain_core_tools.BaseTool):
 
     def _run(
             self,
+            PatienData: bool,
             payment_method: str,
             agrees_to_policies: bool,
             run_manager: Optional[
                 langchain_core_callbacks.CallbackManagerForToolRun
             ] = None,
     ) -> str:
-        if agrees_to_policies:
+        if PatienData and agrees_to_policies:
+
             if self.chat_history.status == models.ChatStatus.status2:
                 self.chat_history.status = models.ChatStatus.status3
-            return f"Gracias por confirmar. Tu método de pago es {payment_method}."
-        else:
-            return "Por favor, debes estar de acuerdo con las políticas para continuar."
+        return "Hola Doctora Mariana."
 
 class InformPsychologist(langchain_core_tools.BaseTool):
     """Tool that informs the psychologist about a new appointment."""
@@ -136,12 +136,10 @@ class InformPsychologist(langchain_core_tools.BaseTool):
                 langchain_core_callbacks.CallbackManagerForToolRun
             ] = None,
     ) -> str:
-        if self.chat_history:
-            # Check if the doctor has any more questions
-            if self.chat_history.doctor_has_questions:
-                return f"Psicologa Mariana, tiene un nuevo paciente. ¿Tiene alguna pregunta?"
-            elif self.chat_history.status == models.ChatStatus.status3:
-                self.chat_history.status = models.ChatStatus.status4
+        if MeetPatient and self.chat_history.status == models.ChatStatus.status3:
+            self.chat_history.status = models.ChatStatus.status4
+        else:
+            return "No entiendo lo que quieres decir"
 
-        return f"Psicologa Mariana, tiene un nuevo paciente"
+
 
