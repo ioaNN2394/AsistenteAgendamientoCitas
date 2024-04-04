@@ -1,20 +1,32 @@
 import pymongo
 
-Mongo_Host = "localhost"
-Mongo_Puerto = 27017
-Mongo_Tiempo_espera = 1000
+class MongoConnection:
+    def __init__(self, host="localhost", port=27017, timeout=1000):
+        self.host = host
+        self.port = port
+        self.timeout = timeout
+        self.client = None
 
-Mongo_URI = "mongodb://"+Mongo_Host+":"+str(Mongo_Puerto)+"/"
+    def connect(self):
+        mongo_uri = f"mongodb://{self.host}:{self.port}/"
+        try:
+            self.client = pymongo.MongoClient(mongo_uri, serverSelectionTimeoutMS=self.timeout)
+            self.client.server_info()  # This line will raise an exception if connection fails
+            print("Conectado a MongoDB")
+        except pymongo.errors.ServerSelectionTimeoutError as err:
+            print("Tiempo excedido: ", err)
+            self.client = None
+        except pymongo.errors.ConnectionFailure as err:
+            print("Error al conectar a MongoDB: ", err)
+            self.client = None
 
-try:
-    client = pymongo.MongoClient(Mongo_URI, serverSelectionTimeoutMS=Mongo_Tiempo_espera)
-    client.server_info()
-    print("Conectado a MongoDB")
-    client.close()
+    def close(self):
+        if self.client is not None:
+            self.client.close()
+            print("Desconectado de MongoDB")
 
-except pymongo.errors.ServerSelectionTimeoutError as errorTiempo:
-    print("Tiempo excedido: ", errorTiempo)
-    client = None
-except pymongo.errors.ConnectionFailure as errorConexion:
-    print("Error al conectar a MongoDB: ", errorConexion)
-    client = None
+# Usage
+mongo_connection = MongoConnection()
+mongo_connection.connect()
+# Do your operations here
+mongo_connection.close()

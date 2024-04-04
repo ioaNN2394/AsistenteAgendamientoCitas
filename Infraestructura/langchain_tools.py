@@ -1,7 +1,8 @@
 from typing import Type, Any, Optional
 
 import pydantic
-
+from AccesoDatos.Mongo_Connection import MongoConnection
+from AccesoDatos.patient_model import PatientModel
 from langchain_core import (
     tools as langchain_core_tools,
     callbacks as langchain_core_callbacks,
@@ -21,6 +22,12 @@ class _QuotetInfo(pydantic.BaseModel):
     PatienData: bool = pydantic.Field(..., description="El paciente confirma sus datos")
     payment_method: str = pydantic.Field(..., description="Metodo de pago del paciente")
     agrees_to_policies: bool = pydantic.Field(..., description="El paciente esta de acuerdo con las politicas")
+
+    name: str = pydantic.Field(..., description="Nombre del paciente")
+    age: int = pydantic.Field(..., description="Edad del paciente")
+    motive: str = pydantic.Field(..., description="Motivo de la consulta")
+    country: str = pydantic.Field(..., description="Pais del paciente")
+    date: str = pydantic.Field(..., description="Fecha de la cita")
 
 
 
@@ -79,7 +86,6 @@ class SendPatientInfo(langchain_core_tools.BaseTool):
 
 
 
-
 class VerifyPatientInfo(langchain_core_tools.BaseTool):
     """Tool that fetches active deployments."""
 
@@ -93,24 +99,35 @@ class VerifyPatientInfo(langchain_core_tools.BaseTool):
 
     def __init__(
         self, chat_history: Optional[models.Chat] = None, **kwargs: Any
+
     ) -> None:
         super().__init__(**kwargs)
         self.chat_history = chat_history
+
 
     def _run(
             self,
             PatienData: bool,
             payment_method: str,
             agrees_to_policies: bool,
+            name: str,
+            age: int,
+            motive: str,
+            country: str,
+            date: str,
             run_manager: Optional[
                 langchain_core_callbacks.CallbackManagerForToolRun
             ] = None,
     ) -> str:
-        if PatienData and agrees_to_policies:
 
+        if PatienData and agrees_to_policies:
             if self.chat_history.status == models.ChatStatus.status2:
+                patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
                 self.chat_history.status = models.ChatStatus.status3
-        return "Hola Doctora Mariana."
+
+                patient_model = PatientModel()
+                patient_model.insert_patient(patient_info)
+                return "Hola Doctora Mariana."
 
 class InformPsychologist(langchain_core_tools.BaseTool):
     """Tool that informs the psychologist about a new appointment."""
