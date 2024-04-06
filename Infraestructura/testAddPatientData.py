@@ -1,31 +1,24 @@
 import unittest
-from AccesoDatos.patient_model import PatientModel
+from Infraestructura.langchain_tools import InformPsychologist, models
 
-class Test_Add_Patient_Data(unittest.TestCase):
-    def test_insert_patient(self):
-        # Create a PatientModel instance
-        patient_model = PatientModel()
+class TestInformPsychologist(unittest.TestCase):
+    def setUp(self):
+        self.chat_history = models.Chat()
+        self.chat_history.status = models.ChatStatus.status3
+        self.tool = InformPsychologist(chat_history=self.chat_history)
 
-        # Define test data
-        test_data = {
-            "name": "TJohan",
-            "age": 20,
-            "motive": "Test Ansidad",
-            "country": "Test Colombia",
-            "date": "2024-02-12"
-        }
-
-        # Insert test data into the database
-        insert_result = patient_model.insert_patient(test_data)
-
-        # Check if the data was inserted
-        if insert_result.inserted_id is None:
-            print("Failed to insert data")
-        else:
-            print(f"Data inserted with id {insert_result.inserted_id}")
-
-        # Close the connection
-        patient_model.close_connection()
+    def test_run_MeetPatient_true_status3(self):
+        self.tool._run(
+            MeetPatient=True,
+            name="Test",
+            age=30,
+            motive="Test",
+            country="Test",
+            date="Test",
+            run_manager=None
+        )
+        # Verificar que el estado del chat cambió a status4
+        self.assertEqual(self.chat_history.status, models.ChatStatus.status4)
 
 if __name__ == '__main__':
     unittest.main()

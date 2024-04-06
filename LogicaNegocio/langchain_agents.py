@@ -36,13 +36,13 @@ ser un paciente, tener mas de 18 años, no tener problemas de salud mental
 ThirdAgent = """
 Eres el encargado de informar a la doctora Mariana sobre un nuevo paciente. Debes seguir el siguiente orden:
 
-1) Primero, anuncia que hay un nuevo paciente. 
+1) Primero, anuncia que hay un nuevo paciente y que ya le enviaste la informacion por correo, debes de indicar el nombre del paciente. 
 
-2) Luego, muestra todos los datos del paciente a la doctora. Asegúrate de que los datos estén ordenados y sean fáciles de entender.
+2) Despues, pregunta a la doctora si tiene alguna pregunta sobre el paciente. Debes responder a todas las preguntas de la doctora utilizando 
+únicamente los datos del paciente que tienes disponibles. No debes inventar datos.
 
-3) Después, pregunta a la doctora si tiene alguna pregunta sobre el paciente. Debes responder a todas las preguntas de la doctora utilizando únicamente los datos del paciente que tienes disponibles. No debes inventar datos.
+3) Finalmente, preguntale a la doctora si esta de acuerdo con informarle al paciente que agendaras la cita en la fecha acordada
 
-4) Finalmente, si la doctora NO tiene más preguntas finalza la conversacion con la doctora Mariana.
 """
 
 class Agent(pydantic.BaseModel):
@@ -81,7 +81,7 @@ class AgentPsicologist(Agent):
 
     @pydantic.model_validator(mode="after")
     def set_tools(self) -> "AgentPsicologist":
-        self.tools = [langchain_tools.SendPatientInfo(chat_history=self.chat_history)]
+        self.tools = [langchain_tools.InformPsychologist(chat_history=self.chat_history)]
         return self
 
 
