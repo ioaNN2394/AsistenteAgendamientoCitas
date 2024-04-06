@@ -23,11 +23,6 @@ class _QuotetInfo(pydantic.BaseModel):
     payment_method: str = pydantic.Field(..., description="Metodo de pago del paciente")
     agrees_to_policies: bool = pydantic.Field(..., description="El paciente esta de acuerdo con las politicas")
 
-    name: str = pydantic.Field(..., description="Nombre del paciente")
-    age: int = pydantic.Field(..., description="Edad del paciente")
-    motive: str = pydantic.Field(..., description="Motivo de la consulta")
-    country: str = pydantic.Field(..., description="Pais del paciente")
-    date: str = pydantic.Field(..., description="Fecha de la cita")
 
 
 
@@ -37,6 +32,14 @@ class PatientInfoChecker:
 
     def is_info_complete(self) -> bool:
         return all(value not in (None, '') for value in self.patient_info.dict().values())
+
+
+class VerifyPatientInfoChecker:
+    def __init__(self, VerifyPatient: _QuotetInfo):
+        self.VerifyPatient = VerifyPatient
+
+    def is_info_complete(self) -> bool:
+        return all(value not in (None, '') for value in self.VerifyPatient.dict().values())
 
 
 class DoctorMPatient(pydantic.BaseModel): # M = Meet
@@ -110,24 +113,19 @@ class VerifyPatientInfo(langchain_core_tools.BaseTool):
             PatienData: bool,
             payment_method: str,
             agrees_to_policies: bool,
-            name: str,
-            age: int,
-            motive: str,
-            country: str,
-            date: str,
             run_manager: Optional[
                 langchain_core_callbacks.CallbackManagerForToolRun
             ] = None,
     ) -> str:
+        VerifyPatient = _QuotetInfo(PatienData=PatienData, payment_method=payment_method, agrees_to_policies=agrees_to_policies)
 
-        if PatienData and agrees_to_policies:
-            if self.chat_history.status == models.ChatStatus.status2:
-                patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
-                self.chat_history.status = models.ChatStatus.status3
+        info_Verify = VerifyPatientInfoChecker(VerifyPatient)
+        if not info_Verify.is_info_complete():
+            return "Debes de estar de acuerdo con las politicas y confirmar tu informacion para continuar con la cita"
 
-                patient_model = PatientModel()
-                patient_model.insert_patient(patient_info)
-                return "Hola Doctora Mariana."
+        if self.chat_history.status == models.ChatStatus.status2:
+            self.chat_history.status = models.ChatStatus.status3
+        return "Hola Doctora Mariana"
 
 class InformPsychologist(langchain_core_tools.BaseTool):
     """Tool that informs the psychologist about a new appointment."""
@@ -157,6 +155,5 @@ class InformPsychologist(langchain_core_tools.BaseTool):
             self.chat_history.status = models.ChatStatus.status4
         else:
             return "No entiendo lo que quieres decir"
-
 
 

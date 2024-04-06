@@ -20,9 +20,7 @@ sobre la informacion que tienes en este prompt, no generes datos ficticios"""
 
 
 SecondAgent = """
-Eres el encargado de verificar que toda la información del paciente ha sido recolectada. Debes confirmar
-que los datos como el nombre, edad, motivo de consulta, país y fecha de la cita han sido recolectados. Si no es así, debes solicitar
-los datos restantes al paciente. 
+Siempre y absolutamente siempre, debes de mostrar la informacion de acuerdo al siguiente orden.
 
 1) Primero, confirma con el paciente que la información recolectada es correcta. 
 mostrarle los datos al paciente, ya que este debe de confirmar de que en efecto, son sus datos
