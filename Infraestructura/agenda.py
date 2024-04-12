@@ -2,13 +2,14 @@ import json
 import os.path
 import datetime as dt
 from typing import Dict, Optional
-
+import dateparser
 import requests
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import pytz
-
+import dateparser
+from Infraestructura.AvoidCircularImport import _PatientInfo
 # from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from pprint import pprint
@@ -32,7 +33,7 @@ class GoogleCalendarManager:
                 creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    "../client_secret_app_escritorio_oauth.json", SCOPES
+                    "C:/Users/johan/Desktop/ING.S Project/client_secret_app_escritorio_oauth.json", SCOPES
                 )
                 creds = flow.run_local_server(port=0)
 
@@ -117,6 +118,36 @@ class GoogleCalendarManager:
         else:
             print(f"Error: {response.status_code} - {response.text}")
             return None
+
+    def create_patient_event(self, patient_info: _PatientInfo):
+        token = self._token["token"]
+        url = f"https://www.googleapis.com/calendar/v3/calendars/primary/events"
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Define the start and end times for the event
+        start_time = dateparser.parse(patient_info.date).replace(year=2024, hour=9)  # 9 AM
+        end_time = start_time + dt.timedelta(hours=1)  # 1 hour duration
+
+        # Define the event body
+        event = {
+            'summary': f'Cita con {patient_info.name} - {patient_info.motive}',
+            'start': {
+                'dateTime': start_time.isoformat(),
+                'timeZone': 'America/Bogota',
+            },
+            'end': {
+                'dateTime': end_time.isoformat(),
+                'timeZone': 'America/Bogota',
+            },
+        }
+
+        # Send the request to create the event
+        response = requests.post(url, headers=headers, json=event)
+
+        if response.status_code == 200:
+            print(f"Event created for {patient_info.name} on {patient_info.date}")
+        else:
+            print(f"Error: {response.status_code} - {response.text}")
 
 
 calendar = GoogleCalendarManager()

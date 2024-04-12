@@ -22,7 +22,7 @@ sobre la informacion que tienes en este prompt, no generes datos ficticios"""
 SecondAgent = """
 Siempre y absolutamente siempre, debes de mostrar la informacion de acuerdo al siguiente orden.
 
-1) Primero, confirma con el paciente que la información recolectada es correcta. 
+1) Primero, confirma con el paciente que la información recolectada es correcta (nombre, edad, motivo de consulta, pais y fecha). 
 mostrarle los datos al paciente, ya que este debe de confirmar de que en efecto, son sus datos
 
 2) Luego pregunta al paciente sobre su método de pago preferido. 
@@ -34,14 +34,17 @@ ser un paciente, tener mas de 18 años, no tener problemas de salud mental
 """
 
 ThirdAgent = """
-Eres el encargado de informar a la doctora Mariana sobre un nuevo paciente. Debes seguir el siguiente orden:
+Eres el encargado de informar a la doctora Mariana sobre un nuevo paciente, Siempre 
+debes de suministrar toda la informacion de acuerdo al siguiente orden:
 
 1) Primero, anuncia que hay un nuevo paciente y que ya le enviaste la informacion por correo, debes de indicar el nombre del paciente. 
 
 2) Despues, pregunta a la doctora si tiene alguna pregunta sobre el paciente. Debes responder a todas las preguntas de la doctora utilizando 
-únicamente los datos del paciente que tienes disponibles. No debes inventar datos.
+únicamente los datos del paciente que tienes disponibles. No debes inventar datos, Siempre debes terminar con ¿Tiene mas dudas Doctora Mariana?
+Si no hay mas dudas, procede al siguiente paso, de lo contrario sigue respondiendo sus inquietudes.
 
-3) Finalmente, preguntale a la doctora si esta de acuerdo con informarle al paciente que agendaras la cita en la fecha acordada
+3) Finalmente, preguntale a la doctora si esta de acuerdo con informarle al paciente que agendaras la cita en la fecha acordada, debes de
+informarle la fecha que suministro el paciente
 
 """
 
@@ -60,21 +63,20 @@ class StandardAgent(Agent):
     def set_tools(self) -> "StandardAgent":
         self.tools = [langchain_tools.SendPatientInfo(chat_history=self.chat_history)]
         return self
+
 class AgentQoute(Agent):
     name: str = "Quote Information"
     instruction: str = SecondAgent
     chat_history: models.Chat
     tools: Optional[List] = None
 
-
     @pydantic.model_validator(mode="after")
     def set_tools(self) -> "AgentQoute":
         self.tools = [langchain_tools.VerifyPatientInfo(chat_history=self.chat_history)]
         return self
 
-
 class AgentPsicologist(Agent):
-    name: str = "Psicologist Information"
+    name: str = "Psychologist Information"
     instruction: str = ThirdAgent
     chat_history: models.Chat
     tools: Optional[List] = None
@@ -84,11 +86,8 @@ class AgentPsicologist(Agent):
         self.tools = [langchain_tools.InformPsychologist(chat_history=self.chat_history)]
         return self
 
-
-
 AGENT_FACTORY: Dict[models.ChatStatus, Type[Agent]] = {
     models.ChatStatus.status1: StandardAgent,
     models.ChatStatus.status2: AgentQoute,
     models.ChatStatus.status3: AgentPsicologist
-
 }

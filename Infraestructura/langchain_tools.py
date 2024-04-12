@@ -5,7 +5,6 @@ from email.message import EmailMessage
 import ssl
 import smtplib
 import pydantic
-from AccesoDatos.Mongo_Connection import MongoConnection
 from AccesoDatos.patient_model import PatientModel
 from langchain_core import (
     tools as langchain_core_tools,
@@ -13,26 +12,24 @@ from langchain_core import (
 )
 
 from Infraestructura import models
-
+from Infraestructura.agenda import GoogleCalendarManager
 
 class _PatientInfo(pydantic.BaseModel):
     name: str = pydantic.Field(..., description="Nombre del paciente")
     age: int = pydantic.Field(..., description="Edad del paciente")
     motive: str = pydantic.Field(..., description="Motivo de la consulta")
-    country: str = pydantic.Field(..., description="Pais del paciente")
+    country: str = pydantic.Field(..., description="País del paciente")
     date: str = pydantic.Field(..., description="Fecha de la cita")
 
 class _QuotetInfo(pydantic.BaseModel):
     PatienData: bool = pydantic.Field(..., description="El paciente confirma sus datos")
-    payment_method: str = pydantic.Field(..., description="Metodo de pago del paciente")
-    agrees_to_policies: bool = pydantic.Field(..., description="El paciente esta de acuerdo con las politicas")
-    name: str = pydantic.Field(..., description="Nombre del paciente")
-    age: int = pydantic.Field(..., description="Edad del paciente")
-    motive: str = pydantic.Field(..., description="Motivo de la consulta")
-    country: str = pydantic.Field(..., description="Pais del paciente")
-    date: str = pydantic.Field(..., description="Fecha de la cita")
-
-
+    payment_method: str = pydantic.Field(..., description="Método de pago del paciente")
+    agrees_to_policies: bool = pydantic.Field(..., description="El paciente está de acuerdo con las políticas")
+    name: str = pydantic.Field(..., description="Ya tenemos el nombre del paciente")
+    age: int = pydantic.Field(..., description="Ya tenemos la edad del paciente")
+    motive: str = pydantic.Field(..., description="Ya tenemos su motivo de consulta")
+    country: str = pydantic.Field(..., description="Ya tenemos su pais")
+    date: str = pydantic.Field(..., description="Ya tenemos la fecha de la cita")
 
 class PatientInfoChecker:
     def __init__(self, patient_info: _PatientInfo):
@@ -58,98 +55,92 @@ class VerifyPatientInfoChecker:
 
         return True
 
-
-class SendEmail():
+class SendEmail:
     def __init__(self, patient_info):
         load_dotenv()
-
-        self.emailsender = "agentsendmail007@gmail.com" #Se envia el correo electronico
+        self.emailsender = "agentsendmail007@gmail.com"
         self.password = os.getenv("PASSWORD")
-        self.email_reciever = "johansa2394@gmail.com" #Recibe el correo electronico enviado por "self.emailsender"
+        self.email_reciever = "johansa2394@gmail.com"
 
         self.subject = "Datos de nuevo paciente "
         self.body = (f"Hola Doctora Mariana, Tiene un nuevo paciente sus datos son:\n "
                      f"Nombre del paciente: {patient_info.name}\n "
                      f"Edad del paciente: {patient_info.age}\n "
                      f"Motivo de consulta: {patient_info.motive}\n"
-                     f"Pais del paciente: {patient_info.country}\n "
+                     f"País del paciente: {patient_info.country}\n "
                      f"Fecha de preferencia de la cita: {patient_info.date}")
-        em = EmailMessage()
-        em["From"] = self.emailsender
-        em["To"] = self.email_reciever
-        em["Subject"] = self.subject
-        em.set_content(self.body)
 
-        context = ssl.create_default_context()
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
-            smtp.login(self.emailsender, self.password)
-            smtp.sendmail(self.emailsender, self.email_reciever, em.as_string())
+    def send(self):
+        try:
+            em = EmailMessage()
+            em["From"] = self.emailsender
+            em["To"] = self.email_reciever
+            em["Subject"] = self.subject
+            em.set_content(self.body)
 
-class DoctorMPatient(pydantic.BaseModel): # M = Meet
-    MeetPatient: bool = pydantic.Field(..., description="La doctora no tiene mas dudas sobre el paciente")
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+                smtp.login(self.emailsender, self.password)
+                smtp.sendmail(self.emailsender, self.email_reciever, em.as_string())
+            return True, None
+        except Exception as e:
+            return False, str(e)
+
+class DoctorMPatient(pydantic.BaseModel):
+    MeetPatient: bool = pydantic.Field(..., description="La doctora no tiene más dudas sobre el paciente")
     AllInfo: str = pydantic.Field(..., description="La doctora conoce todo sobre el paciente")
     name: str = pydantic.Field(..., description="Nombre del paciente")
     age: int = pydantic.Field(..., description="Edad del paciente")
     motive: str = pydantic.Field(..., description="Motivo de la consulta")
-    country: str = pydantic.Field(..., description="Pais del paciente")
+    country: str = pydantic.Field(..., description="País del paciente")
     date: str = pydantic.Field(..., description="Fecha de la cita")
 
 class VerifyDoctorMPatient:
-    def __init__(self, VerifyAllInfo: DoctorMPatient):
-        self.VerifyAllInfo = VerifyAllInfo
-
-    def is_info_complete(self) -> bool:
+    @staticmethod
+    def is_info_complete(VerifyAllInfo: DoctorMPatient) -> bool:
         # Verificar que todos los valores no sean None o vacíos
-        if not all(value not in (None, '') for value in self.VerifyAllInfo.dict().values()):
+        if not all(value not in (None, '') for value in VerifyAllInfo.dict().values()):
             return False
 
         # Verificar que AllInfo no esté vacío
-        if not self.VerifyAllInfo.AllInfo:
+        if not VerifyAllInfo.AllInfo:
             return False
 
         return True
 
-
-
-
 class SendPatientInfo(langchain_core_tools.BaseTool):
-    """Tool that fetches active deployments."""
-
     name: str = "send_patient_info_to_professional"
-    description: str = (
-        "Util cuando el paciente quiere agendar una cita con la doctora, para enviar informacion"
-    )
+    description: str = "Util cuando el paciente quiere agendar una cita con la doctora, para enviar información"
     args_schema: Type[pydantic.BaseModel] = _PatientInfo
     chat_history: Optional[models.Chat] = None
     return_direct = True
 
-
-    def __init__(
-        self, chat_history: Optional[models.Chat] = None,**kwargs: Any
-    ) -> None:
+    def __init__(self, chat_history: Optional[models.Chat] = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.chat_history = chat_history
 
     def _run(
-            self,
-            name: str,
-            age: int,
-            motive: str,
-            country: str,
-            date: str,
-            run_manager: Optional[
-                langchain_core_callbacks.CallbackManagerForToolRun
-            ] = None,
+        self,
+        name: str,
+        age: int,
+        motive: str,
+        country: str,
+        date: str,
+        run_manager: Optional[
+            langchain_core_callbacks.CallbackManagerForToolRun
+        ] = None,
     ) -> str:
         patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
         info_checker = PatientInfoChecker(patient_info)
 
         if not info_checker.is_info_complete():
-            return "Porfavor suministra todos los datos necesarios para agendar tu cita de manera correcta"
+            return "Por favor, suministra todos los datos necesarios para agendar tu cita de manera correcta"
 
         if self.chat_history.status == models.ChatStatus.status1:
             self.chat_history.status = models.ChatStatus.status2
-        return "Hola otra vez, para continuar con el agendamiento de la cita envia (Continuar)"
+            return "Hola otra vez, para continuar con el agendamiento de la cita envía (Continuar)"
+        else:
+            return "Error: Estado incorrecto del chat"
 
 class VerifyPatientInfo(langchain_core_tools.BaseTool):
     """Tool that fetches active deployments."""
@@ -193,55 +184,49 @@ class VerifyPatientInfo(langchain_core_tools.BaseTool):
         if self.chat_history.status == models.ChatStatus.status2:
             self.chat_history.status = models.ChatStatus.status3
             patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
-            SendEmail(patient_info)
-
-
-        return "Hola Doctora Mariana"
+            email_sender = SendEmail(patient_info)
+            email_sender.send()
+        return "Hola doctora Mariana ya tengo la información del paciente"
 
 class InformPsychologist(langchain_core_tools.BaseTool):
-    """Tool that informs the psychologist about a new appointment."""
-
     name: str = "inform_psychologist_status3"
-    description: str = (
-        "Used when a patient has requested an appointment and the chat status is status3. This tool informs the psychologist about the appointment and provides all the patient's data."
-    )
+    description: str = "Util cuando un paciente ha solicitado una cita y el estado del chat es status3. Esta herramienta informa al psicólogo sobre la cita programada y proporciona todos los datos del paciente."
     args_schema: Type[pydantic.BaseModel] = DoctorMPatient
     chat_history: Optional[models.Chat] = None
     return_direct = True
 
-    def __init__(
-        self, chat_history: Optional[models.Chat] = None, **kwargs: Any
-    ) -> None:
+    def __init__(self, chat_history: Optional[models.Chat] = None, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.chat_history = chat_history
 
     def _run(
-            self,
-            MeetPatient: bool,
-            AllInfo: str,
-            name: str,
-            age: int,
-            motive: str,
-            country: str,
-            date: str,
-            run_manager: Optional[
-                langchain_core_callbacks.CallbackManagerForToolRun
-            ] = None,
+        self,
+        MeetPatient: bool,
+        AllInfo: str,
+        name: str,
+        age: int,
+        motive: str,
+        country: str,
+        date: str,
+        run_manager: Optional[
+            langchain_core_callbacks.CallbackManagerForToolRun
+        ] = None,
     ) -> str:
-
+        # Solo verificamos los campos necesarios
         VerifyAllInfo = DoctorMPatient(MeetPatient=MeetPatient, AllInfo=AllInfo, name=name, age=age, motive=motive, country=country, date=date)
 
-        info_Verify = VerifyDoctorMPatient(VerifyAllInfo)
-        if not info_Verify.is_info_complete():
-            return "¿Informo al paciente que usted esta dispuesta a agendar?"
+        # Verificamos si los campos requeridos están completos
+        if not VerifyDoctorMPatient.is_info_complete(VerifyAllInfo):
+            return "Por favor, asegúrate de confirmar que estás dispuesta a agendar la cita."
 
         if self.chat_history.status == models.ChatStatus.status3:
             self.chat_history.status = models.ChatStatus.status4
             patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
-
+            calendar_manager = GoogleCalendarManager()
+            calendar_manager.create_patient_event(patient_info)
             patient_model = PatientModel()
             patient_model.insert_patient(patient_info)
-        return "Ya tengo la respuesta de la Doctora Mariana, gracias por tu tiempo."
-
-
+            return "Ya tengo la respuesta de la Doctora Mariana, gracias por tu tiempo."
+        else:
+            return "Error: Estado incorrecto del chat"
 
