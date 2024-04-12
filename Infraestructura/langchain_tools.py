@@ -175,12 +175,14 @@ class VerifyPatientInfo(langchain_core_tools.BaseTool):
                 langchain_core_callbacks.CallbackManagerForToolRun
             ] = None,
     ) -> str:
-        VerifyPatient = _QuotetInfo(PatienData=PatienData, payment_method=payment_method, agrees_to_policies=agrees_to_policies, name=name, age=age, motive=motive, country=country, date=date)
+        VerifyPatient = _QuotetInfo(PatienData=PatienData, payment_method=payment_method,
+                                    agrees_to_policies=agrees_to_policies, name=name, age=age, motive=motive,
+                                    country=country, date=date)
 
         info_Verify = VerifyPatientInfoChecker(VerifyPatient)
         if not info_Verify.is_info_complete():
-            return "Debes de estar de acuerdo con las politicas y confirmar tu informacion para continuar con la cita"
-            #En este return seria prudente responder con "Cuales son las politicas"
+            return "Debes de estar de acuerdo con las politicas para continuar con la cita"
+
         if self.chat_history.status == models.ChatStatus.status2:
             self.chat_history.status = models.ChatStatus.status3
             patient_info = _PatientInfo(name=name, age=age, motive=motive, country=country, date=date)
@@ -190,7 +192,9 @@ class VerifyPatientInfo(langchain_core_tools.BaseTool):
 
 class InformPsychologist(langchain_core_tools.BaseTool):
     name: str = "inform_psychologist_status3"
-    description: str = "Util cuando un paciente ha solicitado una cita y el estado del chat es status3. Esta herramienta informa al psicólogo sobre la cita programada y proporciona todos los datos del paciente."
+    description: str = ("Util cuando un paciente ha solicitado una cita y el estado del chat es status3. "
+                        "Esta herramienta informa al psicólogo sobre la cita programada y proporciona todos los"
+                        " datos del paciente.")
     args_schema: Type[pydantic.BaseModel] = DoctorMPatient
     chat_history: Optional[models.Chat] = None
     return_direct = True
@@ -212,8 +216,9 @@ class InformPsychologist(langchain_core_tools.BaseTool):
             langchain_core_callbacks.CallbackManagerForToolRun
         ] = None,
     ) -> str:
-        # Solo verificamos los campos necesarios
-        VerifyAllInfo = DoctorMPatient(MeetPatient=MeetPatient, AllInfo=AllInfo, name=name, age=age, motive=motive, country=country, date=date)
+
+        VerifyAllInfo = DoctorMPatient(MeetPatient=MeetPatient, AllInfo=AllInfo, name=name, age=age, motive=motive,
+                                       country=country, date=date)
 
         # Verificamos si los campos requeridos están completos
         if not VerifyDoctorMPatient.is_info_complete(VerifyAllInfo):
