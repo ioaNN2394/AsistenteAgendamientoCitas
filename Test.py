@@ -72,10 +72,10 @@ class TestGoogleCalendarManager(unittest.TestCase):
         self.calendar.create_patient_event(self.patient_info)
 
 #----------------------------------Pruebas Unitarias----------------------------------
-import os
+
 
 class TestOpenAIConnection(unittest.TestCase):
-    @patch('os.environ', {'OPENAI_API_KEY': ' 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'})
+    @patch('os.environ', {'OPENAI_API_KEY': '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'})
     def test_openai_connection(self):
         # Create a test chat
         chat = Chat()
