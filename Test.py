@@ -29,7 +29,7 @@ class TestSendEmail(unittest.TestCase):
 
 
     @patch('smtplib.SMTP_SSL')
-    def test_send(self, mock_smtp):
+    def test_send_email_to_patient(self, mock_smtp):
         patient_info = _PatientInfo(name="John Doe", age=30, motive="Consultation", country="CANADA", date="2022-12-12")
         email_sender = SendEmail(patient_info)
         result, error = email_sender.send()
@@ -40,7 +40,7 @@ class TestPatientModel(unittest.TestCase):
         self.patient_model = PatientModel()
         self.patient_info = _PatientInfo(name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
 
-    def test_insert_patient(self):
+    def test_insert_patient_into_database(self):
         # Insert the test patient into the database
         self.patient_model.insert_patient(self.patient_info)
 
@@ -60,7 +60,7 @@ class TestGoogleCalendarManager(unittest.TestCase):
         self.patient_info = _PatientInfo(name="Test Name", motive="TEST", date="2024-5-5", age=30, country="Country Name")
         self.calendar = GoogleCalendarManager()
 
-    def test_create_event(self):
+    def test_create_calendar_event_for_patient(self):
         # Test get_free_busy_agenda
         response = self.calendar.get_free_busy_agenda()
         self.assertIsNotNone(response)
@@ -91,11 +91,11 @@ class TestPatientInfoChecker(unittest.TestCase):
     def setUp(self):
         self.patient_info = _PatientInfo(name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
 
-    def test_is_info_complete(self):
+    def test_patient_info_completeness(self):
         checker = PatientInfoChecker(self.patient_info)
         self.assertTrue(checker.is_info_complete())
 
-    def test_doctor_patient_info_is_complete(self):
+    def test_doctor_patient_info_completeness(self):
         verify_all_info = DoctorMPatient(MeetPatient=True, AllInfo="All info", name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
         self.assertTrue(VerifyDoctorMPatient.is_info_complete(verify_all_info))
 
@@ -142,7 +142,7 @@ class TestEndToEnd(unittest.TestCase):
         self.calendar_manager = GoogleCalendarManager()
         self.email_sender = SendEmail(self.patient_info)
 
-    def test_end_to_end(self):
+    def test_end_to_end_workflow(self):
         # Simulate interaction in state 1
         self.send_patient_info_tool._run(name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
         self.assertEqual(self.chat.status, ChatStatus.status2)
