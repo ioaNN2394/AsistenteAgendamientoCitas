@@ -20,6 +20,9 @@ from LogicaNegocio.langchain_executor import invoke
 from dotenv import load_dotenv
 load_dotenv()  # take environment variables from .env.
 
+from LogicaNegocio import langchain_executor
+from Infraestructura.models import Chat, Message, SenderEnum
+
 #----------------------------------Pruebas Integracion----------------------------------
 
 
@@ -75,7 +78,7 @@ class TestGoogleCalendarManager(unittest.TestCase):
 
 
 class TestOpenAIConnection(unittest.TestCase):
-    @patch('os.environ', {'OPENAI_API_KEY': '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'})
+    @patch('os.environ', {'OPENAI_API_KEY': 'sk-proj-nx3giY95WVsYxTUfhF9WT3BlbkFJC5qBrh6jbzFXTAq4lg0W'})
     def test_openai_connection(self):
         # Create a test chat
         chat = Chat()
@@ -129,45 +132,43 @@ class TestInformPsychologist(unittest.TestCase):
         result = self.tool._run(MeetPatient=self.verify_all_info.MeetPatient, AllInfo=self.verify_all_info.AllInfo, name=self.verify_all_info.name, age=self.verify_all_info.age, motive=self.verify_all_info.motive, country=self.verify_all_info.country, date=self.verify_all_info.date)
         self.assertEqual(result, "Ya tengo la respuesta de la Doctora Mariana, gracias por tu tiempo.")
 
-
 #----------------------------------Prueba End to End----------------------------------
 
-class TestEndToEnd(unittest.TestCase):
+
+class TestEndToEndStatus1(unittest.TestCase):
     def setUp(self):
-        self.chat = Chat()
-        self.patient_info = _PatientInfo(name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
-        self.send_patient_info_tool = SendPatientInfo(chat_history=self.chat)
-        self.verify_patient_info_tool = VerifyPatientInfo(chat_history=self.chat)
-        self.inform_psychologist_tool = InformPsychologist(chat_history=self.chat)
-        self.calendar_manager = GoogleCalendarManager()
-        self.email_sender = SendEmail(self.patient_info)
+        # Establecer la llave de la API como una variable de entorno
+        os.environ['OPENAI_API_KEY'] = 'sk-proj-nx3giY95WVsYxTUfhF9WT3BlbkFJC5qBrh6jbzFXTAq4lg0W'
 
-    def test_end_to_end_workflow(self):
-        # Simulate interaction in state 1
-        self.send_patient_info_tool._run(name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
-        self.assertEqual(self.chat.status, ChatStatus.status2)
+    def test_status1(self):
+        # Crear una instancia de chat con el estado inicial
+        chat = Chat()
 
-        # Supply patient data
-        verify_patient = _QuotetInfo(PatienData=True, payment_method="Cash", agrees_to_policies=True, name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
+        # Definir los inputs del usuario
+        user_inputs = ["Hola", "Quiero agendar una cita", "Mi nombre es Juan", "Tengo 30 años", "Vivo en México", "Tengo ansiedad", "La cita puede ser el 30 de marzo", "Continuar"]
 
-        # Simulate interaction in state 2
-        self.verify_patient_info_tool._run(PatienData=True, payment_method="Cash", agrees_to_policies=True, name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
-        self.assertEqual(self.chat.status, ChatStatus.status3)
+        # Palabras clave o frases esperadas en las respuestas del agente
+        expected_keywords = ["Claudia", "agendar", "Juan", "Juan", "cita", "cita", "Continuar"]
 
-        # Confirm patient data and payment method
-        verify_all_info = DoctorMPatient(MeetPatient=True, AllInfo="All info", name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
+        for user_input, expected_keyword in zip(user_inputs, expected_keywords):
+            # Invocar la función con el input del usuario y la instancia de chat
+            print("chat.status: ", chat.status)
+            ai_response = langchain_executor.invoke(query=user_input, chat_history=chat)
 
-        # Simulate interaction in state 3
-        self.inform_psychologist_tool._run(MeetPatient=True, AllInfo="All info", name="John Doe", age=30, motive="Consultation", country="USA", date="2022-12-12")
-        self.assertEqual(self.chat.status, ChatStatus.status4)
+            # Verificar que la respuesta del agente contiene la palabra clave o frase esperada
+            self.assertIn(expected_keyword, ai_response)
 
-        # Create event
-        self.calendar_manager.create_patient_event(self.patient_info)
+            # Añadir los mensajes al historial de chat
+            human_message = Message(sender=SenderEnum.HumanMessage, message=user_input)
+            ai_message = Message(sender=SenderEnum.AIMessage, message=ai_response)
+            chat.messages.extend([human_message, ai_message])
 
-        # Send email
-        result, error = self.email_sender.send()
-        self.assertTrue(result)
-        self.assertIsNone(error)
+            # Si el estado del chat es 'status2', terminar la prueba
+            if chat.status == ChatStatus.status2:
+                break
+
+        # Verificar que el estado del chat es el esperado
+        self.assertEqual(chat.status, "status2")
 
 if __name__ == '__main__':
     unittest.main()
