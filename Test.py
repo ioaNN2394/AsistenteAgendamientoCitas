@@ -245,11 +245,11 @@ class TestInformPsychologist(unittest.TestCase):
 class TestEndToEndStatus1(unittest.TestCase):
     def setUp(self):
         # Establecer la llave de la API como una variable de entorno
-        os.environ["OPENAI_API_KEY"] = (
-            "sk-proj-exRLI3SNdIMSidMMx3voT3BlbkFJhFCVAWG978SVjVboGfIu"
-        )
+        os.environ[
+            "OPENAI_API_KEY"
+        ] = "sk-proj-exRLI3SNdIMSidMMx3voT3BlbkFJhFCVAWG978SVjVboGfIu"
 
-    def test_status1(self):
+    def test_workflow_status1(self):
         # Crear una instancia de chat con el estado inicial
         chat = Chat()
 
