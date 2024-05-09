@@ -1,0 +1,8 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: flake8
+        args: ["--ignore=E501,E265,E302,E305"]
+
+
