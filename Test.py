@@ -52,7 +52,7 @@ class TestSendEmail(unittest.TestCase):
         self.assertIsNone(error)
 
 
-class TestPatientModel(unittest.TestCase):
+class TestPatientModel_Insert_in_DataBase(unittest.TestCase):
     def setUp(self):
         self.patient_model = PatientModel()
         self.patient_info = _PatientInfo(
@@ -104,13 +104,10 @@ class TestGoogleCalendarManager(unittest.TestCase):
         self.calendar.create_patient_event(self.patient_info)
 
 
-# ----------------------------------Pruebas Unitarias----------------------------------
-
-
 class TestOpenAIConnection(unittest.TestCase):
     @patch(
         "os.environ",
-        {"OPENAI_API_KEY": "sk-proj-exRLI3SNdIMSidMMx3voT3BlbkFJhFCVAWG978SVjVboGfIu"},
+        {"OPENAI_API_KEY": " "},
     )
     def test_openai_connection(self):
         # Create a test chat
@@ -123,7 +120,7 @@ class TestOpenAIConnection(unittest.TestCase):
         self.assertIsNotNone(response)
 
 
-# Tools
+# ----------------------------------Pruebas Unitarias----------------------------------
 
 
 class TestPatientInfoChecker(unittest.TestCase):
@@ -244,10 +241,7 @@ class TestInformPsychologist(unittest.TestCase):
 
 class TestEndToEndStatus1(unittest.TestCase):
     def setUp(self):
-        # Establecer la llave de la API como una variable de entorno
-        os.environ[
-            "OPENAI_API_KEY"
-        ] = "sk-proj-exRLI3SNdIMSidMMx3voT3BlbkFJhFCVAWG978SVjVboGfIu"
+        os.environ["OPENAI_API_KEY"] = " "
 
     def test_workflow_status1(self):
         # Crear una instancia de chat con el estado inicial
