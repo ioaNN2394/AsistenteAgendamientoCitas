@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/github/ioaNN2394/CitasProyecto/graph/badge.svg?token=EURV1TQWR4)](https://codecov.io/github/ioaNN2394/CitasProyecto)
+
 # CitasProyecto
 
 # Descripción del Problema:
