@@ -107,7 +107,7 @@ class TestGoogleCalendarManager(unittest.TestCase):
 class TestOpenAIConnection(unittest.TestCase):
     @patch(
         "os.environ",
-        {"OPENAI_API_KEY": " "},
+        {"OPENAI_API_KEY": "sk-proj-mEiG5o9HimMW3iazz0UyT3BlbkFJOLibnA3KSojRlW0hpdHD"},
     )
     def test_openai_connection(self):
         # Create a tests chat
@@ -241,7 +241,9 @@ class TestInformPsychologist(unittest.TestCase):
 
 class TestEndToEndStatus1(unittest.TestCase):
     def setUp(self):
-        os.environ["OPENAI_API_KEY"] = " "
+        os.environ[
+            "OPENAI_API_KEY"
+        ] = "sk-proj-mEiG5o9HimMW3iazz0UyT3BlbkFJOLibnA3KSojRlW0hpdHD"
 
     def test_workflow_status1(self):
         # Crear una instancia de chat con el estado inicial
