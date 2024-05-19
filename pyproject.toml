@@ -5,6 +5,9 @@ description = ""
 authors = ["jval7 <jhonvalderramaa7@gmail.com>"]
 readme = "README.md"
 
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.5"
+
 [tool.poetry.dependencies]
 python = "3.10.13"
 langchain = "^0.0.345"
