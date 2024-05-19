@@ -64,7 +64,7 @@ class TestPatientModel_Insert_in_DataBase(unittest.TestCase):
         )
 
     def test_insert_patient_into_database(self):
-        # Insert the tests patient into the database
+        # Insert the app patient into the database
         self.patient_model.insert_patient(self.patient_info)
 
         # Retrieve the patient from the database
@@ -72,7 +72,7 @@ class TestPatientModel_Insert_in_DataBase(unittest.TestCase):
             {"name": self.patient_info.name}
         )
 
-        # Verify that the retrieved patient's information matches the tests patient's information
+        # Verify that the retrieved patient's information matches the app patient's information
         self.assertEqual(patient_in_db["name"], self.patient_info.name)
         self.assertEqual(patient_in_db["age"], self.patient_info.age)
         self.assertEqual(patient_in_db["motive"], self.patient_info.motive)
@@ -110,7 +110,7 @@ class TestOpenAIConnection(unittest.TestCase):
         {"OPENAI_API_KEY": " "},
     )
     def test_openai_connection(self):
-        # Create a tests chat
+        # Create a app chat
         chat = Chat()
 
         # Call the invoke function with a simple query

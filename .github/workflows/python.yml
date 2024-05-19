@@ -27,13 +27,13 @@ jobs:
         poetry install
 
 
-    - name: Run tests
+    - name: Run app
       run: |
         poetry run pytest --cov=main.py --cov-report=xml
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
       with:
-          flags: smart-tests
+          flags: smart-app
           verbose: true
       env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
