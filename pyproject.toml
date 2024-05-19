@@ -25,6 +25,7 @@ cryptography = "^42.0.3"
 pytz = "^2024.1"
 pytest-cov = "^5.0.0"
 python-dotenv = "^1.0.1"
+pymongo = "^4.7.2"
 
 
 [tool.poetry.group.dev.dependencies]
