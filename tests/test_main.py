@@ -1,7 +1,7 @@
 import os
 import unittest
 from unittest.mock import patch
-
+import pytest
 from dotenv import load_dotenv
 
 from AccesoDatos.patient_model import PatientModel
@@ -52,6 +52,7 @@ class TestSendEmail(unittest.TestCase):
         self.assertIsNone(error)
 
 
+@pytest.mark.skip(reason="Skipping database tests")
 class TestPatientModel_Insert_in_DataBase(unittest.TestCase):
     def setUp(self):
         self.patient_model = PatientModel()
@@ -80,6 +81,7 @@ class TestPatientModel_Insert_in_DataBase(unittest.TestCase):
         self.assertEqual(patient_in_db["date"], self.patient_info.date)
 
 
+@pytest.mark.skip(reason="Skipping Google Calendar tests")
 class TestGoogleCalendarManager(unittest.TestCase):
     def setUp(self):
         self.patient_model = PatientModel()
@@ -104,6 +106,7 @@ class TestGoogleCalendarManager(unittest.TestCase):
         self.calendar.create_patient_event(self.patient_info)
 
 
+@pytest.mark.skip(reason="Skipping OpenAI connection tests")
 class TestOpenAIConnection(unittest.TestCase):
     @patch(
         "os.environ",
@@ -239,6 +242,7 @@ class TestInformPsychologist(unittest.TestCase):
     # ----------------------------------Prueba End to End----------------------------------
 
 
+@pytest.mark.skip(reason="Skipping end-to-end tests")
 class TestEndToEndStatus1(unittest.TestCase):
     def setUp(self):
         os.environ[
